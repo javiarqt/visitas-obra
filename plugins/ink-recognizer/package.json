@@ -1,0 +1,9 @@
+{
+  "name": "ink-recognizer",
+  "version": "1.0.0",
+  "description": "Reconocimiento de escritura a mano con Google ML Kit (Digital Ink)",
+  "main": "index.js",
+  "files": ["android/"],
+  "capacitor": { "android": { "src": "android" } },
+  "peerDependencies": { "@capacitor/core": ">=6.0.0" }
+}

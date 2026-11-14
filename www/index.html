@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Actas de obra</title>
+<style>
+:root{--bg:#e9e7e2;--paper:#fff;--ink:#1d2733;--mute:#66707b;--line:#cfcbc2;--acc:#f2b705}
+@media(prefers-color-scheme:dark){:root{--bg:#14181d;--paper:#1d242c;--ink:#e8e6e1;--mute:#98a1ab;--line:#35404b}}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding-top:env(safe-area-inset-top,0px)}
+.bar{position:sticky;top:0;z-index:20;background:#1d2733;color:#fff;padding:10px 14px;display:flex;gap:8px;align-items:center}
+.bar b{font-size:15px}.bar small{opacity:.7;display:block;font-size:12px}
+.bar select{margin-left:auto;max-width:50%;background:#2c3a49;color:#fff;border:0;padding:8px;border-radius:4px;font:inherit;font-size:14px;width:auto}
+.prog{height:4px;background:#1d2733}.prog i{display:block;height:100%;background:var(--acc)}
+main{max-width:760px;margin:0 auto;padding:14px 12px 100px}
+.card{background:var(--paper);border:1px solid var(--line);border-top:6px solid var(--acc);padding:18px 16px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:20px 0 4px}.sub{color:var(--mute);margin:0 0 14px;font-size:14px}
+label{display:block;font-size:13px;color:var(--mute);margin:12px 0 3px}
+input,textarea,select{width:100%;font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:4px;padding:10px}
+textarea{min-height:100px;resize:vertical}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink);padding:10px 14px;border-radius:4px;min-height:44px}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+.pri{background:var(--acc);border-color:var(--acc);color:#1d2733;font-weight:700}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--paper);border-top:1px solid var(--line);display:flex;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+.nav button{flex:1}
+.item{border:1px solid var(--line);padding:10px;margin-top:12px}
+.item .hd{display:flex;justify-content:space-between;align-items:center;color:var(--mute);font-size:13px;gap:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ck{display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--ink);font-size:15px}.ck input{width:22px;height:22px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
+.im{border:1px solid var(--line);padding:4px}.im img{width:100%;display:block;background:#fff}
+.im .b{display:flex;gap:4px;margin-top:4px}.im .b button{flex:1;padding:4px;min-height:34px;font-size:13px}
+.im input{margin-top:4px;padding:6px;font-size:13px}
+.ov{position:fixed;inset:0;z-index:50;background:#111;display:flex;flex-direction:column}
+.ov .tb{display:flex;flex-wrap:wrap;gap:6px;padding:calc(8px + env(safe-area-inset-top,0px)) 8px 8px;background:#1d2733}
+.ov .tb button{color:#fff;border-color:#ffffff44;min-height:40px;padding:6px 10px}
+.ov .tb .on{outline:3px solid var(--acc)}
+.ov .cw{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px}
+.ov canvas{max-width:100%;max-height:100%;background:#fff;touch-action:none}
+.msg{margin-top:12px;font-size:14px;color:var(--mute);min-height:20px}
+.pbar{position:relative;height:30px;background:#d63c32;border-radius:4px;overflow:hidden;color:#fff;margin-top:8px}
+.pbar i{display:block;height:100%;background:#2ea043}
+.pbar b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.grp{margin-top:18px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.logo{max-width:220px;max-height:80px;border:1px dashed var(--line);padding:6px;background:#fff;display:block;margin-top:8px}
+.rc{display:flex;gap:10px;align-items:center;border-bottom:1px dashed var(--line);padding:6px 0}.rc input{width:22px;height:22px}
+</style>
+</head>
+<body>
+<div class="bar"><div><b id="ttl"></b><small id="st"></small></div><select id="jump" aria-label="Ir a"></select></div>
+<div class="prog"><i id="pg"></i></div>
+<main><div class="card" id="app"></div></main>
+<div class="nav" id="navb"><button id="bk">Atrás</button><button id="nx" class="pri">Siguiente</button></div>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/jszip.min.js"></script>
+<script src="lib/pdf-lib.min.js"></script>
+<script src="export.js"></script>
+<script>
+(function(){
+var KD="actas-obra-dir-v1",KO="actas-obra-ob-v1",KL="actas-obra-logo-v1",KC="actas-obra-cur-v1";
+var ROLES=["Propiedad","Constructor","Arquitecto","Arquitecto técnico"];
+var STEPS=["Datos de la obra","Asistentes","Revisión del acta anterior","Temas tratados","Planificación de las obras","Control de calidad","Seguridad y salud","Información económica","Próxima visita","Fotos","Documentos anexos","Acta final"];
+var VIEWS={actas:"Actas guardadas",obras:"Obras",dir:"Intervinientes"};
+var $=function(i){return document.getElementById(i)};
+function ls(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function lw(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var DIR=ls(KD,[]),OB=ls(KO,[]),ACTS=[],S,step=0,mode="steps",msg="",flt="",tmr,DB;
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+DIR.forEach(function(d){if(!d.id)d.id=uid();if(!d.ps)d.ps=[]});OB.forEach(function(o){if(!o.id)o.id=uid();if(o.proy==null)o.proy=""});
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+/* ---- almacenamiento (IndexedDB) ---- */
+function dbOpen(){return new Promise(function(res){try{var r=indexedDB.open("actas-obra-db",1);r.onupgradeneeded=function(){r.result.createObjectStore("actas",{keyPath:"id"})};r.onsuccess=function(){DB=r.result;res()};r.onerror=function(){res()}}catch(e){res()}})}
+function dbAll(){return new Promise(function(res){if(!DB)return res([]);var q=DB.transaction("actas").objectStore("actas").getAll();q.onsuccess=function(){res(q.result||[])};q.onerror=function(){res([])}})}
+function dbPut(o){try{DB&&DB.transaction("actas","readwrite").objectStore("actas").put(o)}catch(e){}}
+function dbDel(id){try{DB&&DB.transaction("actas","readwrite").objectStore("actas").delete(id)}catch(e){}}
+function flush(){clearTimeout(tmr);if(!S)return;S.upd=Date.now();if(ACTS.indexOf(S)<0)ACTS.push(S);dbPut(S);lw(KC,S.id);$("st").textContent="Acta guardada"}
+function save(){clearTimeout(tmr);tmr=setTimeout(flush,400)}
+document.addEventListener("visibilitychange",function(){if(document.hidden)flush()});
+
+/* ---- modelo ---- */
+function blank(prev){
+ var o=prev||{},pend=[];
+ if(prev){(prev.pend||[]).forEach(function(p){if(p.est==="Pendiente")pend.push({t:p.t,from:p.from,est:"Pendiente",nota:""})});
+  (prev.temas||[]).forEach(function(t){var tx=[t.t].concat((t.img||[]).filter(function(m){return m.as==="txt"&&m.txt}).map(function(m){return m.txt})).filter(function(x){return x&&x.trim()}).join("\n");if(tx)pend.push({t:tx,from:prev.num,est:"Pendiente",nota:""})})}
+ return{id:uid(),num:prev?(+prev.num||0)+1:1,obraId:o.obraId||"",obra:o.obra||"",ubi:o.ubi||"",docs:[],prop:o.prop||"",proy:o.proy||"",dir:o.dir||"",fecha:new Date().toISOString().slice(0,10),
+  att:o.att?o.att.map(function(a){return{r:a.r,n:a.n,e:a.e,t:a.t,m:a.m,ok:true}}):ROLES.map(function(r){return{r:r,n:"",e:"",t:"",m:"",ok:true}}),
+  aprob:"Pendiente",pend:pend,temas:[{t:"",img:[]}],plan:"",cc:"",ss:"",eco:"",pres:o.pres||"",cert:o.cert||"",prox:"",proxf:"",proxh:"",fotos:[],upd:Date.now()}
+}
+function latest(obraId,not){var l=ACTS.filter(function(a){return a.obraId&&a.obraId===obraId&&a.id!==not});l.sort(function(a,b){return(b.num-a.num)||(b.upd-a.upd)});return l[0]}
+function fresh(s){return!s.temas.some(function(t){return t.t||t.img.length})&&!s.pend.length&&!s.plan&&!s.cc&&!s.ss&&!s.eco&&!s.fotos.length}
+function newFrom(prev){flush();S=blank(prev);ACTS.push(S);if(S.obraId)mergeGroup(S.obraId);flush();step=0;mode="steps";msg="";render();window.scrollTo(0,0)}
+
+function mergeGroup(id){var l=DIR.filter(function(d){return(d.ps||[]).indexOf(id)>=0});if(!l.length)return 0;
+ var have={};S.att.forEach(function(a){if(a.n)have[a.n]=1});var add=l.filter(function(d){return!have[d.n]});
+ if(add.length)S.att=S.att.filter(function(a){return a.n||a.t||a.m}).concat(add.map(function(d){return{r:d.r||"",n:d.n,e:d.e||"",t:d.t||"",m:d.m||"",ok:true}}));
+ save();return add.length}
+function grpBlock(){if(!OB.length)return'<p class="sub">Crea obras y asigna intervinientes en el menú Obras para añadirlos de golpe.</p>';
+ return'<div class="item"><label>Añadir todos los intervinientes de un proyecto</label><select id="grpsel">'+OB.map(function(o){return'<option value="'+o.id+'"'+(o.id===S.obraId?" selected":"")+'>'+esc((o.proy?o.proy+" · ":"")+(o.obra||"(sin nombre)"))+'</option>'}).join("")+'</select><div class="acts"><button class="pri" data-a="addgrp">Añadir todos</button></div></div>'}
+function xObra(o){return'<label>Intervinientes de esta obra</label>'+(DIR.length?DIR.map(function(d){return'<label class="ck"><input type="checkbox" data-g="'+d.id+'|'+o.id+'"'+((d.ps||[]).indexOf(o.id)>=0?" checked":"")+'>'+esc(d.n||"(sin nombre)")+(d.r?" ("+esc(d.r)+")":"")+'</label>'}).join(""):'<p class="sub">Primero añade intervinientes.</p>')}
+function xDir(d){return'<label>Obras en las que participa</label>'+(OB.length?OB.map(function(o){return'<label class="ck"><input type="checkbox" data-g="'+d.id+'|'+o.id+'"'+((d.ps||[]).indexOf(o.id)>=0?" checked":"")+'>'+esc((o.proy?o.proy+" · ":"")+(o.obra||"(sin nombre)"))+'</label>'}).join(""):'<p class="sub">Primero añade obras.</p>')}
+function docsStep(){var h='<h1>Documentos anexos</h1><p class="sub">Añade planos, certificaciones u otros documentos (PDF o imagen). Se incluyen al final del acta.</p>';
+ S.docs.forEach(function(d,i){h+='<div class="item"><div class="hd"><span>Anexo '+(i+1)+' · '+(d.type==="pdf"?"PDF":"Imagen")+' · '+Math.round(d.size/1024)+' KB</span><button data-a="deldoc" data-i="'+i+'">Quitar</button></div><input data-p="docs.'+i+'.name" value="'+esc(d.name)+'"></div>'});
+ if(!S.docs.length)h+='<p class="sub">Todavía no hay documentos.</p>';
+ return h+'<div class="acts"><button class="pri" data-a="adddoc">Añadir documento</button></div><p class="msg" id="msg">'+esc(msg)+'</p><p class="sub">En el Word, los PDF solo se listan: se adjuntan completos en el PDF del acta.</p>'}
+function addDocs(){var f=document.createElement("input");f.type="file";f.accept="application/pdf,image/*";f.multiple=true;
+ f.onchange=function(){Array.prototype.forEach.call(f.files,function(file){
+  if(file.type==="application/pdf"||/\.pdf$/i.test(file.name)){
+   if(file.size>20*1024*1024){setMsg("«"+file.name+"» pesa más de 20 MB.");return}
+   var r=new FileReader();r.onload=function(){S.docs.push({name:file.name,type:"pdf",d:r.result,size:file.size});save();render()};r.readAsDataURL(file)}
+  else if(/^image\//.test(file.type)){var u=URL.createObjectURL(file),im=new Image();
+   im.onload=function(){var s=Math.min(1,2000/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+    var d=c.toDataURL("image/jpeg",.82);S.docs.push({name:file.name,type:"img",d:d,w:c.width,h:c.height,size:Math.round(d.length*.75)});save();render()};im.src=u}
+  else setMsg("Formato no admitido: "+file.name+" (solo PDF o imagen).")})};f.click()}
+function inkLines(st){var B={};st.forEach(function(s){if(!s.length)return;var c=0;s.forEach(function(q){c+=q[1]});c/=s.length;var k=Math.floor(c/80);(B[k]=B[k]||[]).push(s)});
+ return Object.keys(B).map(Number).sort(function(a,b){return a-b}).map(function(k){return B[k].sort(function(a,b){return a[0][2]-b[0][2]})})}
+function recog(m){var C=window.Capacitor,P=C&&C.Plugins&&C.Plugins.InkRecognizer;
+ if(!Exp.isNative()||!P){alert("La conversión a texto solo está disponible en la app de Android.");return}
+ if(!m.ink||!m.ink.length){alert("Este bloque no tiene trazos que leer.");return}
+ $("st").textContent="Leyendo escritura…";
+ P.recognize({lang:"es",width:1000,height:700,lines:inkLines(m.ink)}).then(function(r){var t=(r.lines||[]).join("\n").trim();
+  if(!t){alert("No se ha podido leer ningún texto.");$("st").textContent="";return}
+  m.txt=t;m.as="txt";save();render()}).catch(function(e){$("st").textContent="";alert("No se pudo convertir: "+(e&&e.message||e))})}
+function inkBlock(m,p,j){var t=m.as==="txt",a='data-p="'+p+'" data-j="'+j+'"';
+ return'<div class="im" style="grid-column:1/-1">'+(t?'<textarea data-p="'+p+'.'+j+'.txt">'+esc(m.txt)+'</textarea>':'<img alt="Escritura a mano" src="'+m.d+'">')+
+ '<div class="b"><button data-a="inkimg" '+a+(t?'':' class="pri"')+'>Manuscrito</button><button data-a="inktxt" '+a+(t?' class="pri"':'')+'>Texto</button>'+(t?'<button data-a="inkre" '+a+'>Releer</button>':'')+'<button data-a="del" '+a+'>Quitar</button></div></div>'}
+function get(p){return p.split(".").reduce(function(o,k){return o==null?"":o[k]},S)}
+function set(p,v){var a=p.split("."),o=S;for(var i=0;i<a.length-1;i++)o=o[a[i]];o[a[a.length-1]]=v}
+function F(l,p,t){return'<label>'+l+'</label><input type="'+(t||"text")+'"'+(t==="number"?' step="any" inputmode="decimal"':"")+' data-p="'+p+'" value="'+esc(get(p))+'">'}
+function A(l,p,ph){return'<label>'+l+'</label><textarea data-p="'+p+'" placeholder="'+esc(ph||"")+'">'+esc(get(p))+'</textarea>'}
+function imgs(p,cap){var h='<div class="imgs">';
+ get(p).forEach(function(m,j){if(m.ink){h+=inkBlock(m,p,j);return}h+='<div class="im"><img alt="Imagen '+(j+1)+'" src="'+m.d+'"><div class="b"><button data-a="draw" data-p="'+p+'" data-j="'+j+'">Dibujar</button><button data-a="del" data-p="'+p+'" data-j="'+j+'">Quitar</button></div>'+(cap?'<input data-p="'+p+'.'+j+'.c" placeholder="Pie de foto" value="'+esc(m.c)+'">':'')+'</div>'});
+ return h+'</div>'}
+function btns(p){return'<div class="acts"><button class="pri" data-a="wr" data-p="'+p+'">Escribir con lápiz</button><button data-a="sk" data-p="'+p+'">Croquis</button><button data-a="cam" data-p="'+p+'">Hacer foto</button><button data-a="gal" data-p="'+p+'">Galería</button></div>'}
+function barInner(){var e=Exp.econ(S);if(!(e.pres>0))return'<p class="sub">Introduce el presupuesto para ver el porcentaje de obra.</p>';
+ return'<div class="pbar"><i style="width:'+e.pct+'%"></i><b>'+Exp.pc(e.raw)+' realizado</b></div><p class="sub" style="margin-top:6px">Pendiente: '+Exp.pc(Math.max(0,100-e.raw))+' · Certificado '+Exp.eur(e.cert)+' de '+Exp.eur(e.pres)+'</p>'}
+
+/* ---- vistas ---- */
+function obraSel(){return'<label>Obra guardada</label><select data-pickobra="1"><option value="">Elegir…</option>'+OB.map(function(o,k){return'<option value="'+k+'"'+(o.id===S.obraId?" selected":"")+'>'+esc(o.obra||"(sin nombre)")+'</option>'}).join("")+'</select>'}
+function step0(){return'<h1>Datos de la obra</h1><p class="sub">Elige una obra guardada o escribe los datos y guárdalos.</p>'+obraSel()+F("Acta nº","num","number")+F("Obra","obra")+F("Nº de proyecto","proy")+F("Ubicación","ubi")+F("Propiedad","prop")+F("Dirección facultativa","dir")+F("Fecha","fecha","date")+'<div class="acts"><button data-a="todb">Guardar en mis obras</button></div>'}
+function step1(){var h='<h1>Asistentes</h1><p class="sub">Elige del directorio o escribe a mano. Marca quién asiste.</p>'+grpBlock();
+ S.att.forEach(function(a,i){h+='<div class="item"><div class="hd"><span>'+esc(a.r||"Asistente")+'</span><button data-a="delatt" data-i="'+i+'">Quitar</button></div>'+
+  '<label>Elegir del directorio</label><select data-pick="'+i+'"><option value="">Elegir…</option>'+DIR.map(function(d,k){return'<option value="'+k+'">'+esc(d.n)+(d.r?" ("+esc(d.r)+")":"")+'</option>'}).join("")+'</select>'+
+  '<div class="two"><div><label>Rol</label><input data-p="att.'+i+'.r" value="'+esc(a.r)+'"></div><div><label>Nombre</label><input data-p="att.'+i+'.n" value="'+esc(a.n)+'"></div><div><label>Empresa</label><input data-p="att.'+i+'.e" value="'+esc(a.e)+'"></div><div><label>Teléfono</label><input type="tel" data-p="att.'+i+'.t" value="'+esc(a.t)+'"></div></div>'+
+  '<label>Correo electrónico</label><input type="email" data-p="att.'+i+'.m" value="'+esc(a.m)+'"><label class="ck"><input type="checkbox" data-c="att.'+i+'.ok"'+(a.ok?" checked":"")+'>Asiste a la visita</label>'+
+  (a.n&&!DIR.some(function(d){return d.n===a.n})?'<div class="acts"><button data-a="todir" data-i="'+i+'">Guardar en directorio</button></div>':'')+'</div>'});
+ return h+'<div class="acts"><button class="pri" data-a="addatt">Añadir asistente</button></div>'}
+function step2(){var h='<h1>Revisión del acta anterior</h1><label>¿Se aprueba el acta anterior?</label><select data-p="aprob">'+["Pendiente","Sí, aprobada","Aprobada con cambios","No aprobada"].map(function(o){return'<option'+(S.aprob===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select>'+
+ '<h2>Puntos pendientes</h2><p class="sub">Los temas del acta anterior aparecen aquí. Decide cada punto por separado.</p>';
+ if(!S.pend.length)h+='<p class="sub">No hay puntos pendientes.</p>';
+ S.pend.forEach(function(p,i){h+='<div class="item"><div class="hd"><span>'+(p.from?"Acta nº "+esc(p.from):"Añadido a mano")+'</span><button data-a="delpend" data-i="'+i+'">Quitar</button></div><textarea data-p="pend.'+i+'.t">'+esc(p.t)+'</textarea><label>Decisión</label><select data-p="pend.'+i+'.est">'+["Pendiente","Resuelto","Descartado"].map(function(o){return'<option'+(p.est===o?" selected":"")+'>'+o+'</option>'}).join("")+'</select><label>Comentario</label><input data-p="pend.'+i+'.nota" value="'+esc(p.nota)+'"></div>'});
+ return h+'<div class="acts"><button class="pri" data-a="addpend">Añadir punto</button></div>'}
+function step3(){var h='<h1>Temas tratados</h1><p class="sub">Escribe con teclado o con lápiz digital. Tras escribir a mano, elige «Manuscrito» (queda como imagen) o «Texto» (se lee y convierte). Los temas pasarán como pendientes a la próxima acta.</p>';
+ S.temas.forEach(function(t,i){h+='<div class="item"><div class="hd"><span>Tema '+(i+1)+'</span><button data-a="deltema" data-i="'+i+'">Quitar tema</button></div><textarea data-p="temas.'+i+'.t" placeholder="Escribe el tema o acuerdo">'+esc(t.t)+'</textarea>'+imgs("temas."+i+".img")+btns("temas."+i+".img")+'</div>'});
+ return h+'<div class="acts"><button class="pri" data-a="addtema">Añadir tema</button></div>'}
+function step8(){var h='<h1>Próxima visita</h1>'+F("Fecha","proxf","date")+F("Hora","proxh","time")+F("O escríbelo libremente (sustituye a lo anterior)","prox")+
+ '<h2>Enviar el acta</h2><p class="sub">Elige destinatarios. En el móvil se abre el menú de compartir con el PDF adjunto; en el ordenador se abre WhatsApp Web o tu correo y se descarga el PDF.</p>';
+ var any=false;S.att.forEach(function(a,i){if(!a.n)return;any=true;h+='<label class="rc"><input type="checkbox" data-c="att.'+i+'.send"'+(a.send!==false?" checked":"")+'><span>'+esc(a.n)+'<br><small>'+esc([a.t,a.m].filter(Boolean).join(" · ")||"sin teléfono ni correo")+'</small></span></label>'});
+ if(!any)h+='<p class="sub">Añade asistentes con nombre para elegir destinatarios.</p>';
+ return h+'<div class="acts"><button class="pri" data-a="wa">Enviar por WhatsApp</button><button class="pri" data-a="mail">Enviar por email</button></div><p class="msg" id="msg">'+esc(msg)+'</p>'}
+function final(){return'<h1>Acta nº '+esc(S.num)+'</h1><p class="sub">'+esc(S.obra)+' · '+esc(Exp.fd(S.fecha))+'<br>Asistentes: '+esc(S.att.filter(function(a){return a.ok&&a.n}).map(function(a){return a.n}).join(", "))+'<br>Anexos: '+S.docs.length+' · Temas: '+S.temas.filter(function(t){return t.t||t.img.length}).length+' · Fotos: '+S.fotos.length+'</p>'+
+ '<div class="acts"><button class="pri" data-a="pdf">Generar PDF</button><button class="pri" data-a="docx">Guardar en Word</button></div><p class="msg" id="msg">'+esc(msg)+'</p>'+
+ '<h2>Siguiente acta</h2><p class="sub">Esta acta ya queda guardada. La nueva recibe como puntos pendientes los temas de esta.</p><div class="acts"><button data-a="newcont">Crear acta nº '+((+S.num||0)+1)+' de esta obra</button></div>'}
+function stepView(){switch(step){
+ case 0:return step0();case 1:return step1();case 2:return step2();case 3:return step3();
+ case 4:return'<h1>Planificación de las obras</h1>'+A("Trabajos previstos","plan","Qué se hará hasta la próxima visita");
+ case 5:return'<h1>Control de calidad</h1>'+A("Ensayos, probetas, controles","cc","Series de probetas, pruebas, certificados");
+ case 6:return'<h1>Seguridad y salud</h1>'+A("Observaciones","ss","Documentación, incidencias, protecciones");
+ case 7:return'<h1>Información económica</h1>'+F("Presupuesto de la obra (€)","pres","number")+F("Importe certificado acumulado a la fecha (€)","cert","number")+'<div id="ecob">'+barInner()+'</div>'+A("Observaciones","eco","Si no hay nada: Sin documentación al respecto.");
+ case 8:return step8();
+ case 9:return'<h1>Fotos</h1><p class="sub">Haz las fotos en la obra y se añaden al acta. «Dibujar» te deja marcar encima.</p>'+imgs("fotos",1)+'<div class="acts"><button class="pri" data-a="cam" data-p="fotos">Hacer foto</button><button data-a="gal" data-p="fotos">Galería</button></div>';
+ case 10:return docsStep();default:return final()}}
+function listView(title,sub,arr,fields,kind,extra){
+ var h='<h1>'+title+'</h1><p class="sub">'+sub+'</p>';
+ arr.forEach(function(d,i){h+='<div class="item"><div class="hd"><span>'+esc(d[fields[0][0]]||"Nuevo")+'</span><button data-a="del'+kind+'" data-i="'+i+'">Quitar</button></div><div class="two">'+fields.map(function(f,k){return'<div'+(f[2]?' style="grid-column:1/-1"':'')+'><label>'+f[1]+'</label><input '+(f[3]||"")+' data-d="'+kind+'.'+i+'.'+f[0]+'" value="'+esc(d[f[0]])+'"></div>'}).join("")+'</div>'+(extra?extra(d,i):"")+'</div>'});
+ if(!arr.length)h+='<p class="sub">Todavía no hay nada guardado.</p>';
+ return h+'<div class="acts"><button class="pri" data-a="add'+kind+'">Añadir</button><button data-a="back">Volver al acta</button></div>'}
+function actasView(){
+ var h='<h1>Actas guardadas</h1><p class="sub">Todas las actas de todas tus obras.</p>',g={};
+ ACTS.forEach(function(a){var k=(a.proy?a.proy+" · ":"")+(a.obra||"(sin obra)");(g[k]=g[k]||[]).push(a)});
+ var names=Object.keys(g).sort();
+ h+='<label>Filtrar por obra</label><select data-flt="1"><option value="">Todas las obras</option>'+names.map(function(n){return'<option'+(flt===n?" selected":"")+'>'+esc(n)+'</option>'}).join("")+'</select>';
+ names.forEach(function(n){if(flt&&flt!==n)return;var l=g[n].sort(function(a,b){return(b.num-a.num)||(b.upd-a.upd)});
+  h+='<div class="grp"><span>'+esc(n)+'</span><button data-a="newobra" data-id="'+l[0].id+'">Nueva acta de esta obra</button></div>';
+  l.forEach(function(a){h+='<div class="item"><div class="hd"><span><b>Acta nº '+esc(a.num)+'</b> · '+esc(Exp.fd(a.fecha))+(a.id===S.id?" · abierta":"")+'</span></div><div class="acts"><button class="pri" data-a="open" data-id="'+a.id+'">Abrir</button><button data-a="delact" data-id="'+a.id+'">Eliminar</button></div></div>'})});
+ if(!ACTS.length)h+='<p class="sub">Todavía no hay actas.</p>';
+ return h+'<div class="acts"><button class="pri" data-a="newother">Nueva acta (otra obra)</button><button data-a="back">Volver al acta</button></div>'}
+function render(){
+ var v;
+ if(mode==="steps")v=stepView();else if(mode==="actas")v=actasView();else if(mode==="obras")v=listView("Obras","Tu base de datos de obras. Se eligen en el primer paso del acta.",OB,[["obra","Obra",1],["proy","Nº de proyecto"],["ubi","Ubicación"],["prop","Propiedad"],["dir","Dirección facultativa"]],"obra",xObra);
+ else if(mode==="dir")v=listView("Intervinientes","Tu agenda de obra. Se elige en el paso Asistentes.",DIR,[["n","Nombre",1],["r","Rol"],["e","Empresa"],["t","Teléfono",0,'type="tel"'],["m","Correo electrónico",1,'type="email"']],"dir",xDir);
+ else v="";
+ $("app").innerHTML=v;
+ var st=mode==="steps";
+ $("ttl").textContent=st?(step+1)+" de "+STEPS.length+" · "+STEPS[step]:VIEWS[mode];
+ $("pg").style.width=st?((step+1)/STEPS.length*100)+"%":"0";
+ $("bk").style.visibility=step?"visible":"hidden";
+ $("nx").style.display=step===STEPS.length-1?"none":"";
+ $("navb").style.display=st?"flex":"none";
+ $("jump").value=st?"s"+step:mode;
+}
+function go(n){mode="steps";step=Math.max(0,Math.min(STEPS.length-1,n));msg="";if(step===1&&S.obraId&&!S.att.some(function(a){return a.n}))mergeGroup(S.obraId);render();window.scrollTo(0,0)}
+$("jump").innerHTML='<optgroup label="Acta actual">'+STEPS.map(function(s,i){return'<option value="s'+i+'">'+(i+1)+'. '+s+'</option>'}).join("")+'</optgroup><optgroup label="Archivo">'+Object.keys(VIEWS).map(function(k){return'<option value="'+k+'">'+VIEWS[k]+'</option>'}).join("")+'</optgroup>';
+$("jump").onchange=function(){var v=$("jump").value;if(/^s\d+$/.test(v))go(+v.slice(1));else{mode=v;render();window.scrollTo(0,0)}};
+$("bk").onclick=function(){go(step-1)};$("nx").onclick=function(){go(step+1)};
+
+/* ---- fotos ---- */
+function addPhoto(p,url){var im=new Image();im.onload=function(){var s=Math.min(1,1100/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+ c.getContext("2d").drawImage(im,0,0,c.width,c.height);get(p).push({d:c.toDataURL("image/jpeg",.72),w:c.width,h:c.height,c:""});save();render()};im.src=url}
+function pick(p,cam){var C=window.Capacitor,P=C&&C.Plugins;
+ if(cam&&Exp.isNative()&&P&&P.Camera){P.Camera.getPhoto({quality:75,width:1100,resultType:"dataUrl",source:"CAMERA"}).then(function(r){addPhoto(p,r.dataUrl)}).catch(function(){});return}
+ var f=document.createElement("input");f.type="file";f.accept="image/*";if(cam)f.setAttribute("capture","environment");f.multiple=!cam;
+ f.onchange=function(){Array.prototype.forEach.call(f.files,function(file){addPhoto(p,URL.createObjectURL(file))})};f.click()}
+/* ---- editor de lápiz / croquis ---- */
+function editor(base,done,write){
+ var o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="tb"><button data-c="#111" class="on">Negro</button><button data-c="#c0392b">Rojo</button><button data-c="#1f5fbf">Azul</button><button data-w="3" class="w">Fino</button><button data-w="7" class="w">Grueso</button><button data-x="undo">Deshacer</button><button data-x="clr">Borrar</button><button data-x="rule"'+(write?' class="on"':'')+'>Rayas</button><button data-x="grid">Cuadrícula</button><button data-x="pen">Solo lápiz</button><button data-x="cancel">Cancelar</button><button data-x="ok" style="background:#f2b705;color:#1d2733;font-weight:700">Guardar</button></div><div class="cw"><canvas></canvas></div>';
+ document.body.appendChild(o);
+ var cv=o.querySelector("canvas"),x=cv.getContext("2d"),W=1000,H=700,st=[],col="#111",w=3,grid=false,rule=!!write,penOnly=false,bi=null,cur=null;
+ function size(){cv.width=W;cv.height=H;draw()}
+ function lines(c,step,off){x.strokeStyle=c;x.lineWidth=1;x.beginPath();for(var i=off;i<=H;i+=step){x.moveTo(0,i);x.lineTo(W,i)}x.stroke()}
+ function draw(){x.fillStyle="#fff";x.fillRect(0,0,W,H);if(bi)x.drawImage(bi,0,0,W,H);
+  if(rule)lines("rgba(31,95,191,.28)",80,80);
+  if(grid){x.strokeStyle="rgba(0,0,0,.15)";x.lineWidth=1;x.beginPath();for(var i=0;i<=W;i+=50){x.moveTo(i,0);x.lineTo(i,H)}for(i=0;i<=H;i+=50){x.moveTo(0,i);x.lineTo(W,i)}x.stroke()}
+  x.lineCap="round";x.lineJoin="round";
+  st.concat(cur?[cur]:[]).forEach(function(s){x.strokeStyle=s.c;x.fillStyle=s.c;
+   if(s.p.length===1){x.beginPath();x.arc(s.p[0][0],s.p[0][1],s.w/2,0,7);x.fill();return}
+   for(var k=1;k<s.p.length;k++){var a=s.p[k-1],b=s.p[k];x.lineWidth=s.pen?s.w*(.4+1.2*(b[2]||.5)):s.w;x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0],b[1]);x.stroke()}})}
+ if(base){var im=new Image();im.onload=function(){bi=im;var s=Math.min(1,1100/Math.max(im.width,im.height));W=Math.round(im.width*s);H=Math.round(im.height*s);size()};im.src=base}else size();
+ function pt(e){var r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e.pressure,Math.round(e.timeStamp)]}
+ cv.onpointerdown=function(e){if(penOnly&&e.pointerType==="touch")return;cv.setPointerCapture(e.pointerId);cur={c:col,w:w,pen:e.pointerType==="pen",p:[pt(e)]};draw()};
+ cv.onpointermove=function(e){if(cur){cur.p.push(pt(e));draw()}};
+ cv.onpointerup=function(){if(cur){st.push(cur);cur=null;draw()}};
+ o.querySelector(".tb").onclick=function(e){var b=e.target.closest("button");if(!b)return;
+  if(b.dataset.c){col=b.dataset.c;o.querySelectorAll("[data-c]").forEach(function(k){k.classList.remove("on")});b.classList.add("on")}
+  else if(b.dataset.w){w=+b.dataset.w;o.querySelectorAll(".w").forEach(function(k){k.classList.remove("on")});b.classList.add("on")}
+  else{var a=b.dataset.x;if(a==="undo"){st.pop();draw()}else if(a==="clr"){st=[];draw()}else if(a==="grid"){grid=!grid;b.classList.toggle("on");draw()}
+   else if(a==="rule"){rule=!rule;b.classList.toggle("on");draw()}else if(a==="pen"){penOnly=!penOnly;b.classList.toggle("on")}
+   else if(a==="cancel")o.remove();else if(a==="ok"){var d=cv.toDataURL("image/jpeg",.85);o.remove();done(d,W,H,write?st.map(function(s){return s.p.map(function(q){return[Math.round(q[0]),Math.round(q[1]),q[3]]})}).filter(function(s){return s.length}):null)}}};
+}
+
+/* ---- salida y envío ---- */
+function setMsg(t){msg=t;var m=$("msg");if(m)m.textContent=t}
+function fname(){return"Acta_"+S.num+"_"+(S.obra||"obra").replace(/[^\w]+/g,"_")+"_"+(S.fecha||"")}
+function out(kind){setMsg("Generando…");flush();
+ setTimeout(function(){try{var p=kind==="pdf"?Promise.resolve(Exp.pdf(S)):Exp.docx(S);
+  p.then(function(b){return Exp.saveFile(fname()+"."+kind,b,kind==="pdf"?"application/pdf":"application/vnd.openxmlformats-officedocument.wordprocessingml.document")})
+   .then(function(){setMsg((kind==="pdf"?"PDF":"Word")+" listo.")}).catch(function(e){setMsg("No se pudo generar: "+(e&&e.message||e))})}catch(e){setMsg("No se pudo generar: "+e.message)}},30)}
+function phone(t){var d=String(t||"").replace(/\D/g,"");if(d.length===9&&/^[6789]/.test(d))d="34"+d;return d}
+function send(ch){
+ flush();var rec=S.att.filter(function(a){return a.n&&a.send!==false});
+ var px=Exp.px(S),txt="Acta nº "+S.num+(S.obra?" - "+S.obra:"")+" ("+Exp.fd(S.fecha)+")."+(px?"\nPróxima visita: "+px+".":"");
+ setMsg("Preparando…");
+ setTimeout(function(){Promise.resolve(Exp.pdf(S)).then(function(b){var nm=fname()+".pdf";
+  if(Exp.isNative()){Exp.saveFile(nm,b,"application/pdf",txt).then(function(){setMsg("Elige en el menú "+(ch==="wa"?"WhatsApp":"tu correo")+" y el destinatario.")}).catch(function(e){setMsg("No se pudo compartir: "+(e&&e.message||e))});return}
+  Exp.saveFile(nm,b,"application/pdf");
+  if(ch==="wa"){var t=rec.map(function(a){return phone(a.t)}).filter(Boolean);window.open("https://wa.me/"+(t.length===1?t[0]:"")+"?text="+encodeURIComponent(txt),"_blank")}
+  else{var m=rec.map(function(a){return a.m}).filter(Boolean);window.location.href="mailto:"+m.join(",")+"?subject="+encodeURIComponent("Acta nº "+S.num+(S.obra?" - "+S.obra:""))+"&body="+encodeURIComponent(txt+"\n\n(Adjunta el PDF descargado.)")}
+  setMsg("Se ha descargado el PDF: adjúntalo al mensaje.")}).catch(function(e){setMsg("No se pudo enviar: "+e.message)})},30)}
+function pickObra(k){pickObra0(k);var o=OB[k];if(o)mergeGroup(o.id);save();render()}
+function pickObra0(k){var o=OB[k];if(!o)return;S.obraId=o.id;S.obra=o.obra;S.ubi=o.ubi;S.prop=o.prop;S.dir=o.dir;S.proy=o.proy||"";
+ var last=latest(o.id,S.id);if(last&&fresh(S)){var id=S.id,keep=S.fecha;S=blank(last);S.id=id;S.fecha=keep;ACTS=ACTS.filter(function(a){return a.id!==id});ACTS.push(S);if(last.obra!==o.obra)S.obra=o.obra;S.proy=o.proy||""}
+ save();render()}
+
+/* ---- eventos ---- */
+var app=$("app");
+app.addEventListener("input",function(e){var t=e.target;
+ if(t.dataset.p){set(t.dataset.p,t.value);save();if(t.dataset.p==="pres"||t.dataset.p==="cert")$("ecob").innerHTML=barInner()}
+ else if(t.dataset.d){var a=t.dataset.d.split("."),L=a[0]==="dir"?DIR:OB;L[+a[1]][a[2]]=t.value;lw(a[0]==="dir"?KD:KO,L)}});
+app.addEventListener("change",function(e){var t=e.target;
+ if(t.dataset.c){set(t.dataset.c,t.checked);save()}
+ else if(t.dataset.pick!=null&&t.value!==""){var d=DIR[+t.value],a=S.att[+t.dataset.pick];a.n=d.n;a.e=d.e;a.t=d.t;a.m=d.m;if(d.r)a.r=d.r;save();render()}
+ else if(t.dataset.pickobra&&t.value!=="")pickObra(+t.value);
+ else if(t.dataset.flt){flt=t.value;render()}
+ else if(t.dataset.g){var gg=t.dataset.g.split("|"),dd=DIR.filter(function(x){return x.id===gg[0]})[0];if(dd){dd.ps=dd.ps||[];var ix=dd.ps.indexOf(gg[1]);if(t.checked&&ix<0)dd.ps.push(gg[1]);if(!t.checked&&ix>=0)dd.ps.splice(ix,1);lw(KD,DIR)}}});
+app.addEventListener("click",function(e){
+ var b=e.target.closest("button");if(!b||!b.dataset.a)return;var a=b.dataset.a,p=b.dataset.p,i=+b.dataset.i,j=+b.dataset.j,id=b.dataset.id;
+ if(a==="cam")pick(p,1);else if(a==="gal")pick(p,0);
+ else if(a==="sk")editor(null,function(d,w,h){get(p).push({d:d,w:w,h:h,c:""});save();render()},false);
+ else if(a==="wr")editor(null,function(d,w,h,k){var it={d:d,w:w,h:h,c:""};if(k&&k.length){it.ink=k;it.txt="";it.as="img"}get(p).push(it);save();render()},true);
+ else if(a==="draw"){var m=get(p)[j];editor(m.d,function(d,w,h){m.d=d;m.w=w;m.h=h;save();render()},false)}
+ else if(a==="del"){get(p).splice(j,1);save();render()}
+ else if(a==="addtema"){S.temas.push({t:"",img:[]});save();render()}
+ else if(a==="deltema"){S.temas.splice(i,1);if(!S.temas.length)S.temas.push({t:"",img:[]});save();render()}
+ else if(a==="addpend"){S.pend.push({t:"",from:"",est:"Pendiente",nota:""});save();render()}
+ else if(a==="delpend"){S.pend.splice(i,1);save();render()}
+ else if(a==="addatt"){S.att.push({r:"",n:"",e:"",t:"",m:"",ok:true});save();render()}
+ else if(a==="delatt"){S.att.splice(i,1);save();render()}
+ else if(a==="todir"){var x=S.att[i];DIR.push({id:uid(),n:x.n,r:x.r,e:x.e,t:x.t,m:x.m,ps:S.obraId?[S.obraId]:[]});lw(KD,DIR);render()}
+ else if(a==="adddir"){DIR.push({id:uid(),n:"",r:"",e:"",t:"",m:"",ps:[]});lw(KD,DIR);render()}
+ else if(a==="deldir"){DIR.splice(i,1);lw(KD,DIR);render()}
+ else if(a==="addobra"){OB.push({id:uid(),obra:"",proy:"",ubi:"",prop:"",dir:""});lw(KO,OB);render()}
+ else if(a==="delobra"){OB.splice(i,1);lw(KO,OB);render()}
+ else if(a==="todb"){var k=OB.filter(function(o){return o.id===S.obraId})[0];if(!k){k={id:uid()};OB.push(k);S.obraId=k.id}k.obra=S.obra;k.ubi=S.ubi;k.prop=S.prop;k.dir=S.dir;k.proy=S.proy;lw(KO,OB);save();render();$("st").textContent="Obra guardada en tu lista"}
+ else if(a==="back"){mode="steps";render()}
+ else if(a==="pdf"||a==="docx")out(a);
+ else if(a==="wa"||a==="mail")send(a);
+ else if(a==="newcont")newFrom(S);else if(a==="adddoc")addDocs();else if(a==="inkimg"){get(p)[j].as="img";save();render()}else if(a==="inktxt"){var mm=get(p)[j];if(mm.txt){mm.as="txt";save();render()}else recog(mm)}else if(a==="inkre")recog(get(p)[j]);else if(a==="deldoc"){S.docs.splice(i,1);save();render()}
+ else if(a==="newother")newFrom(null);
+ else if(a==="newobra")newFrom(ACTS.filter(function(x){return x.id===id})[0]);
+ else if(a==="open"){flush();S=ACTS.filter(function(x){return x.id===id})[0]||S;lw(KC,S.id);go(STEPS.length-1)}
+ else if(a==="delact"){var q=ACTS.filter(function(x){return x.id===id})[0];if(!q||!confirm("¿Eliminar el acta nº "+q.num+" de "+(q.obra||"sin obra")+"? No se puede deshacer."))return;
+  ACTS=ACTS.filter(function(x){return x.id!==id});dbDel(id);if(S.id===id){S=ACTS.length?ACTS[ACTS.length-1]:blank();if(ACTS.indexOf(S)<0)ACTS.push(S);flush()}render()}
+ else if(a==="addgrp"){var gs=$("grpsel"),nn=gs?mergeGroup(gs.value):0;$("st").textContent=nn?"Añadidos "+nn+" intervinientes":"Todos ya estaban añadidos";render()}
+});
+dbOpen().then(dbAll).then(function(l){ACTS=l;var c=ls(KC,"");S=ACTS.filter(function(x){return x.id===c})[0];
+ if(!S&&ACTS.length){ACTS.sort(function(a,b){return b.upd-a.upd});S=ACTS[0]}
+ if(!S){S=blank();ACTS.push(S);flush()}
+ ACTS.forEach(function(a){if(!a.pend)a.pend=[];if(!a.docs)a.docs=[]});if(!S.pend)S.pend=[];render()});
+})();
+</script>
+</body>
+</html>
